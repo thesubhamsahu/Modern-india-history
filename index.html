@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Indian & World History (1701-2000)</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #222;
+            margin-bottom: 5px;
+        }
+        h1 { font-size: 1.6rem; }
+        h2 { font-size: 1.2rem; margin-top: 30px; }
+        
+        p.subtitle {
+            text-align: center;
+            color: #555;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        
+        /* History Grid Styles */
+        .table-container {
+            overflow-x: auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 10px;
+            scroll-behavior: smooth; 
+        }
+        table {
+            border-collapse: collapse;
+            width: max-content;
+        }
+        td {
+            border: 1px solid #ddd;
+            text-align: center;
+            min-width: 55px; 
+            height: 50px;
+            padding: 0;
+            transition: filter 0.2s ease, background-color 0.2s ease; 
+        }
+        td:hover { filter: brightness(0.9); }
+        td a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            text-decoration: none;
+            color: #222;
+            font-weight: bold;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+        }
+        td a.important-year {
+            text-decoration: underline;
+            text-decoration-thickness: 3px;
+            text-underline-offset: 4px;
+            color: #d32f2f; 
+            font-weight: 900;
+        }
+        .empty-cell { background-color: #f9f9f9; }
+        
+        /* Thick right border every 10 columns perfectly marks a Century! */
+        .century-divider { border-right: 3px solid #333; }
+
+        /* Tap highlight for individual years */
+        .highlighted-year {
+            background-color: #81d4fa !important; 
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        }
+
+        /* Boundary Glow Animation */
+        @keyframes borderPulse {
+            0%   { outline: 4px solid #ff9800; position: relative; z-index: 1; }
+            50%  { outline: 4px solid #ff5722; position: relative; z-index: 1; }
+            100% { outline: 4px solid #ff9800; position: relative; z-index: 1; }
+        }
+
+        .glowing-cell {
+            animation: borderPulse 0.8s infinite ease-in-out;
+            border-color: transparent !important; 
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Eras Legend Styles */
+        .legend-container {
+            display: grid;
+            grid-template-rows: repeat(5, auto); 
+            grid-auto-flow: column;
+            gap: 12px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 15px;
+            overflow-x: auto; 
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #444;
+            cursor: pointer; 
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+        .legend-item:hover {
+            background-color: #e0e0e0; 
+        }
+        .color-box {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        /* Quick Links / Events Grid Layout */
+        .grid-cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+            gap: 12px;
+            padding: 5px;
+            margin-top: 10px;
+        }
+
+        .event-btn {
+            background-color: #e8f5e9; 
+            border: 2px solid #2e7d32; 
+            color: #1b5e20;
+            padding: 12px 8px;
+            border-radius: 8px;
+            text-decoration: none;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .event-btn strong { font-size: 1rem; }
+        .event-btn span { font-size: 0.8rem; margin-top: 5px; font-weight: normal; }
+        .event-btn:hover { background-color: #2e7d32; color: white; }
+    </style>
+</head>
+<body>
+
+    <h1>Indian & World Modern History</h1>
+    <p class="subtitle">Years 1701 - 2000. Important years are <span style="text-decoration:underline; text-decoration-thickness: 2px; color: #d32f2f; font-weight: bold;">underlined</span> (Press & hold for details).</p>
+    
+    <div class="table-container" id="main-table-container">
+        <table>
+            <tbody id="grid-body">
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Historical Eras (Tap to Highlight Boundary)</h2>
+    <div class="legend-container" id="legend-container">
+    </div>
+
+    <h2>Key Historical Events & Movements</h2>
+    <div class="grid-cards-container" id="events-container">
+    </div>
+
+    <script>
+        // --- DATA SETUP ---
+        const historyEras = [
+            { start: 1701, end: 1756, color: "#e3f2fd", name: "Later Mughals & Regional Powers" },
+            { start: 1757, end: 1818, color: "#f3e5f5", name: "Rise of British Power" },
+            { start: 1819, end: 1857, color: "#e8f5e9", name: "Company Consolidation & Uprisings" },
+            { start: 1858, end: 1885, color: "#fff3e0", name: "Crown Rule & Early Nationalism" },
+            { start: 1886, end: 1914, color: "#e0f7fa", name: "Moderate Phase & Swadeshi" },
+            { start: 1915, end: 1947, color: "#fce4ec", name: "Gandhian Era & Independence" },
+            { start: 1948, end: 1964, color: "#ffecb3", name: "Nehruvian Era & Early Republic" },
+            { start: 1965, end: 1990, color: "#dcedc8", name: "Maturing Republic & Cold War Era" },
+            { start: 1991, end: 2000, color: "#d1c4e9", name: "Economic Liberalization & Global Integration" }
+        ];
+
+        const importantYearsMap = {
+            1707: "Death of Aurangzeb",
+            1739: "Nadir Shah's invasion of Delhi",
+            1757: "Battle of Plassey",
+            1761: "Third Battle of Panipat",
+            1764: "Battle of Buxar",
+            1773: "Regulating Act / Boston Tea Party (World)",
+            1789: "French Revolution begins (World)",
+            1799: "Fourth Anglo-Mysore War (Death of Tipu Sultan)",
+            1857: "The Great Revolt of 1857",
+            1858: "Government of India Act (Crown Rule begins)",
+            1885: "Formation of Indian National Congress",
+            1905: "Partition of Bengal / Swadeshi Movement",
+            1914: "World War I begins",
+            1919: "Jallianwala Bagh Massacre / Rowlatt Act",
+            1930: "Dandi March / Civil Disobedience",
+            1939: "World War II begins",
+            1942: "Quit India Movement",
+            1947: "Indian Independence and Partition",
+            1950: "Constitution of India comes into effect",
+            1962: "Sino-Indian War",
+            1971: "Indo-Pak War / Creation of Bangladesh",
+            1975: "National Emergency declared",
+            1991: "Economic Liberalisation in India",
+            1999: "Kargil War"
+        };
+
+        // --- 1. GENERATE HISTORY GRID ---
+        const startYear = 1701; 
+        const totalYears = 300; 
+        const rowsPerColumn = 10;
+        const totalColumns = Math.ceil(totalYears / rowsPerColumn); 
+        const tbody = document.getElementById('grid-body');
+
+        function getEraData(year) {
+            return historyEras.find(era => year >= era.start && year <= era.end);
+        }
+
+        for (let r = 1; r <= rowsPerColumn; r++) {
+            const tr = document.createElement('tr');
+            for (let c = 0; c < totalColumns; c++) {
+                const year = startYear + (c * rowsPerColumn) + (r - 1);
+                const td = document.createElement('td');
+                
+                td.id = 'year-' + year;
+                
+                if ((c + 1) % 10 === 0) td.classList.add('century-divider');
+
+                if (year <= startYear + totalYears - 1) {
+                    const eraData = getEraData(year);
+                    if (eraData) td.style.backgroundColor = eraData.color;
+
+                    const query = encodeURIComponent(`Year ${year} history important events India and world`);
+                    const a = document.createElement('a');
+                    a.href = `https://www.google.com/search?q=${query}`;
+                    a.target = "_self"; 
+                    a.textContent = year;
+                    
+                    if (eraData) a.title = eraData.name;
+                    
+                    if (importantYearsMap[year]) {
+                        a.classList.add('important-year');
+                        a.title += ` | Major Event: ${importantYearsMap[year]}`; 
+                    }
+                    
+                    // Tap highlight listener
+                    a.addEventListener('click', () => {
+                        document.querySelectorAll('.highlighted-year').forEach(el => {
+                            el.classList.remove('highlighted-year');
+                        });
+                        td.classList.add('highlighted-year');
+                        sessionStorage.setItem('tappedYear', year);
+                    });
+                    
+                    td.appendChild(a);
+                } else {
+                    td.classList.add("empty-cell"); 
+                }
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        }
+
+        const tableContainer = document.getElementById('main-table-container');
+
+        // --- SCROLL & HIGHLIGHT RESTORATION LOGIC ---
+        window.addEventListener('pageshow', () => {
+            const savedScrollLeft = sessionStorage.getItem('historyScrollPosition');
+            if (savedScrollLeft) {
+                tableContainer.style.scrollBehavior = 'auto';
+                setTimeout(() => {
+                    tableContainer.scrollLeft = parseInt(savedScrollLeft, 10);
+                    setTimeout(() => {
+                        tableContainer.style.removeProperty('scroll-behavior');
+                    }, 50); 
+                }, 10);
+            }
+
+            const lastTappedYear = sessionStorage.getItem('tappedYear');
+            if (lastTappedYear) {
+                document.querySelectorAll('.highlighted-year').forEach(el => {
+                    el.classList.remove('highlighted-year');
+                });
+                const activeCell = document.getElementById('year-' + lastTappedYear);
+                if (activeCell) {
+                    activeCell.classList.add('highlighted-year');
+                }
+            }
+        });
+
+        tableContainer.addEventListener('scroll', () => {
+            sessionStorage.setItem('historyScrollPosition', tableContainer.scrollLeft);
+        });
+
+        // --- 2. GENERATE ERAS LEGEND & GLOW LOGIC ---
+        const legendContainer = document.getElementById('legend-container');
+        let glowTimeout;
+
+        historyEras.forEach(era => {
+            const item = document.createElement('div');
+            item.className = 'legend-item';
+            
+            const colorBox = document.createElement('div');
+            colorBox.className = 'color-box';
+            colorBox.style.backgroundColor = era.color;
+            
+            const text = document.createElement('span');
+            text.textContent = `${era.name} (${era.start}-${era.end})`;
+            
+            item.appendChild(colorBox);
+            item.appendChild(text);
+            
+            item.onclick = function() {
+                const startCell = document.getElementById('year-' + era.start);
+                
+                if (startCell) {
+                    window.scrollTo({
+                        top: tableContainer.offsetTop - 20,
+                        behavior: 'smooth'
+                    });
+                    
+                    tableContainer.scrollTo({
+                        left: startCell.offsetLeft - 10,
+                        behavior: 'smooth'
+                    });
+
+                    clearActiveGlows();
+                    clearTimeout(glowTimeout);
+
+                    for (let y = era.start; y <= era.end; y++) {
+                        const targetCell = document.getElementById('year-' + y);
+                        if (targetCell) {
+                            targetCell.classList.add('glowing-cell');
+                        }
+                    }
+
+                    glowTimeout = setTimeout(() => {
+                        clearActiveGlows();
+                    }, 1500); 
+                }
+            };
+
+            legendContainer.appendChild(item);
+        });
+
+        function clearActiveGlows() {
+             document.querySelectorAll('.glowing-cell').forEach(cell => {
+                cell.classList.remove('glowing-cell');
+            });
+        }
+
+        // --- 3. GENERATE KEY HISTORICAL EVENTS / LINKS ---
+        const keyEvents = [
+            { event: "Battle of Plassey", year: "1757", relevance: "Initiated British political rule in India" },
+            { event: "Revolt of 1857", year: "1857", relevance: "First major armed rebellion against EIC" },
+            { event: "Formation of INC", year: "1885", relevance: "Birth of organized Indian nationalism" },
+            { event: "Swadeshi Movement", year: "1905", relevance: "Boycott of foreign goods after Bengal partition" },
+            { event: "Non-Cooperation", year: "1920", relevance: "First mass Gandhian movement" },
+            { event: "Civil Disobedience", year: "1930", relevance: "Dandi March breaking the salt law" },
+            { event: "Quit India", year: "1942", relevance: "Demand for immediate end to British rule" },
+            { event: "Independence", year: "1947", relevance: "End of British Raj & Partition of India" },
+            { event: "Republic Day", year: "1950", relevance: "Constitution enforced, India becomes Republic" },
+            { event: "Green Revolution", year: "1960s", relevance: "Agricultural transformation & food security" },
+            { event: "Economic Reforms", year: "1991", relevance: "LPG (Liberalization, Privatization, Globalization)" }
+        ];
+
+        const eventsContainer = document.getElementById('events-container');
+
+        keyEvents.forEach(item => {
+            const query = encodeURIComponent(`${item.event} ${item.year} history India and world significance`);
+            const a = document.createElement('a');
+            
+            a.href = `https://www.google.com/search?q=${query}`;
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            a.className = 'event-btn';
+            
+            a.innerHTML = `<strong>${item.event} (${item.year})</strong><span>${item.relevance}</span>`;
+            
+            eventsContainer.appendChild(a);
+        });
+
+        // --- 4. CLEAR HIGHLIGHT ON OUTSIDE CLICK ---
+        document.addEventListener('click', function(event) {
+            // Check if the clicked target is NOT an 'a' tag inside a 'td' (the year cells)
+            const isYearCell = event.target.closest('td a');
+            
+            if (!isYearCell) {
+                // Remove the blue highlight class from any highlighted cells
+                document.querySelectorAll('.highlighted-year').forEach(el => {
+                    el.classList.remove('highlighted-year');
+                });
+                // Remove it from memory so it doesn't come back on page load
+                sessionStorage.removeItem('tappedYear');
+            }
+        });
+
+    </script>
+</body>
+</html>
